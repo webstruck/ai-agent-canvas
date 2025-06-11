@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Agent Canvas™ Editor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            flex: 1;
+            width: 100%;
+            height: 100vh;
+            background: white;
+            border-radius: 0;
+            box-shadow: none;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            padding: 10px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .header h1 {
+            font-size: 1.8em;
+            margin-bottom: 5px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .canvas-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            grid-template-rows: 1fr 1fr 1fr;
+            gap: 0;
+            margin: 0;
+            flex: 1;
+            overflow: auto;
+        }
+
+        .canvas-section {
+            border: 1px solid #e0e0e0;
+            padding: 6px 8px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            background: #fafafa;
+            transition: all 0.3s ease;
+        }
+
+        .canvas-section:hover {
+            background: #f0f8ff;
+            border-color: #3498db;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .section-title {
+            font-size: 0.9em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 2px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            flex-shrink: 0;
+        }
+
+        .section-subtitle {
+            font-size: 0.75em;
+            color: #7f8c8d;
+            margin-bottom: 4px;
+            font-style: italic;
+            flex-shrink: 0;
+        }
+
+        .editable-area {
+            width: 100%;
+            flex: 1;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 8px;
+            font-size: 14px;
+            line-height: 1.4;
+            resize: none;
+            font-family: inherit;
+            background: white;
+            transition: border-color 0.3s ease;
+            overflow: auto;
+        }
+
+        .editable-area:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        /* Fixed Grid Positioning */
+        .stakeholders { grid-column: 1; grid-row: 1; }
+        .agent-identity { grid-column: 2 / 4; grid-row: 1; }
+        .value-delivered { grid-column: 4; grid-row: 1; }
+        
+        .inputs { grid-column: 1; grid-row: 2; }
+        .core-activities { 
+            grid-column: 2 / 4; 
+            grid-row: 2;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        }
+        .outputs { grid-column: 4; grid-row: 2; }
+        
+        .resources { grid-column: 1; grid-row: 3; }
+        .memory { grid-column: 2; grid-row: 3; }
+        .context { grid-column: 3; grid-row: 3; }
+        .human-loop { grid-column: 4; grid-row: 3; }
+
+        .icon {
+            font-size: 1em;
+        }
+
+        .placeholder-text {
+            color: #95a5a6;
+            font-style: italic;
+        }
+
+        .controls {
+            padding: 8px;
+            background: #f8f9fa;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            flex-shrink: 0;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .btn {
+            padding: 8px 10px;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #27ae60, #229954);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        @media (max-width: 1200px) {
+            .canvas-grid {
+                grid-template-columns: 1fr 1fr;
+                grid-template-rows: 1fr 1fr 1fr 1fr 1fr 1fr;
+            }
+            
+            .stakeholders { grid-column: 1; grid-row: 1; }
+            .agent-identity { grid-column: 1 / 3; grid-row: 2; }
+            .value-delivered { grid-column: 1; grid-row: 3; }
+            .inputs { grid-column: 2; grid-row: 3; }
+            .core-activities { grid-column: 1 / 3; grid-row: 4; }
+            .outputs { grid-column: 1 / 3; grid-row: 4; }
+            .resources { grid-column: 1; grid-row: 5; }
+            .memory { grid-column: 2; grid-row: 5; }
+            .context { grid-column: 1; grid-row: 6; }
+            .human-loop { grid-column: 2; grid-row: 6; }
+        }
+
+        @media (max-width: 768px) {
+            .canvas-grid {
+                grid-template-columns: 1fr;
+                grid-template-rows: repeat(10, minmax(200px, 1fr));
+            }
+            
+            .stakeholders, .agent-identity, .memory, .context, .value-delivered,
+            .inputs, .core-activities, .resources, .outputs, .human-loop {
+                grid-column: 1;
+            }
+            
+            .stakeholders { grid-row: 1; }
+            .agent-identity { grid-row: 2; }
+            .value-delivered { grid-row: 3; }
+            .inputs { grid-row: 4; }
+            .core-activities { grid-row: 5; }
+            .outputs { grid-row: 6; }
+            .resources { grid-row: 7; }
+            .memory { grid-row: 8; }
+            .context { grid-row: 9; }
+            .human-loop { grid-row: 10; }
+        }
+
+        .toast {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: #27ae60;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .data-status {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            z-index: 1000;
+        }
+
+        .status-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-saved { background: #27ae60; }
+        .status-unsaved { background: #e74c3c; }
+        .status-saving { background: #f39c12; }
+        
+        /* Help Modal Styles */
+        .help-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 2000;
+            overflow: hidden;
+        }
+        
+        .help-content {
+            position: relative;
+            background-color: white;
+            width: 80%;
+            max-width: 900px;
+            height: 85%;
+            margin: 40px auto;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 5px 30px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .help-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .help-header h2 {
+            margin: 0;
+            color: #2c3e50;
+            font-weight: 400;
+            font-size: 1.8em;
+        }
+        
+        .help-close {
+            font-size: 28px;
+            font-weight: bold;
+            color: #95a5a6;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+        
+        .help-close:hover {
+            color: #e74c3c;
+        }
+        
+        .help-body {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 10px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        .help-body h1 {
+            font-size: 2em;
+            margin-top: 0.5em;
+            margin-bottom: 0.5em;
+            color: #2c3e50;
+        }
+        
+        .help-body h2 {
+            font-size: 1.5em;
+            margin-top: 1em;
+            margin-bottom: 0.5em;
+            color: #3498db;
+        }
+        
+        .help-body h3 {
+            font-size: 1.2em;
+            margin-top: 1em;
+            margin-bottom: 0.5em;
+            color: #2c3e50;
+        }
+        
+        .help-body ul, .help-body ol {
+            padding-left: 25px;
+            margin-bottom: 15px;
+        }
+        
+        .help-body li {
+            margin-bottom: 5px;
+        }
+        
+        .help-body p {
+            margin-bottom: 15px;
+        }
+        
+        .help-body hr {
+            border: none;
+            border-top: 1px solid #e0e0e0;
+            margin: 20px 0;
+        }
+        
+        .btn-help {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+        }
+        
+        @media (max-width: 768px) {
+            .help-content {
+                width: 95%;
+                height: 90%;
+                margin: 20px auto;
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>AI Agent Canvas™</h1>
+            <p>A Visual Template for Designing AI-Driven Multi-Agent Systems</p>
+        </div>
+
+        <div class="canvas-grid">
+            <div class="canvas-section stakeholders">
+                <div class="section-title">
+                    <span class="icon">👥</span>
+                    TARGET USERS
+                </div>
+                <div class="section-subtitle">Who interacts with this agent?</div>
+                <textarea class="editable-area" id="stakeholders" placeholder="• Human Users&#10;• Other Agents&#10;• Systems&#10;&#10;Examples:&#10;• Software Developers&#10;• QA Engineers&#10;• Product Managers&#10;• DevOps Engineers&#10;• UX Designers&#10;• Technical Writers"></textarea>
+            </div>
+
+            <div class="canvas-section agent-identity">
+                <div class="section-title">
+                    <span class="icon">🤖</span>
+                    AGENT IDENTITY
+                </div>
+                <div class="section-subtitle">Core agent definition</div>
+                <textarea class="editable-area" id="agent-identity" placeholder="Name: [Agent Name]&#10;Role: [Primary Function]&#10;Domain: [Area of operation]&#10;Type: [Reactive/Proactive]&#10;&#10;Example:&#10;Name: CodeAssist&#10;Role: Code review & optimization&#10;Domain: Software Engineering&#10;Type: Proactive"></textarea>
+            </div>
+
+            <div class="canvas-section context">
+                <div class="section-title">
+                    <span class="icon">🌐</span>
+                    CONTEXT
+                </div>
+                <div class="section-subtitle">What situational awareness does it have?</div>
+                <textarea class="editable-area" id="context" placeholder="• Current system state&#10;• Environmental conditions&#10;• Active processes&#10;• Real-time data&#10;&#10;Examples:&#10;• Active repository state&#10;• Current sprint goals&#10;• Team capacity & workload&#10;• CI/CD pipeline status&#10;• Previous feedback history"></textarea>
+            </div>
+
+            <div class="canvas-section value-delivered">
+                <div class="section-title">
+                    <span class="icon">💎</span>
+                    VALUE DELIVERED
+                </div>
+                <div class="section-subtitle">What value does this agent provide?</div>
+                <textarea class="editable-area" id="value-delivered" placeholder="• Efficiency gains&#10;• Quality improvements&#10;• Risk reduction&#10;• Cost savings&#10;&#10;Examples:&#10;• 40% reduction in code review time&#10;• 30% fewer bugs in production&#10;• Consistent code quality&#10;• Knowledge sharing across team&#10;• Reduced technical debt"></textarea>
+            </div>
+
+            <div class="canvas-section inputs">
+                <div class="section-title">
+                    <span class="icon">📥</span>
+                    INPUTS
+                </div>
+                <div class="section-subtitle">What triggers this agent?</div>
+                <textarea class="editable-area" id="inputs" placeholder="• Data feeds&#10;• Events&#10;• Messages&#10;• User requests&#10;&#10;Examples:&#10;• Pull requests&#10;• Code commits&#10;• Issue tickets&#10;• Documentation changes&#10;• Test results&#10;• Static analysis reports"></textarea>
+            </div>
+
+            <div class="canvas-section memory">
+                <div class="section-title">
+                    <span class="icon">🧠</span>
+                    MEMORY
+                </div>
+                <div class="section-subtitle">What does it remember and learn?</div>
+                <textarea class="editable-area" id="memory" placeholder="• Short-term memory&#10;• Long-term knowledge&#10;• Learning capabilities&#10;• Historical patterns&#10;&#10;Examples:&#10;• Codebase structure & patterns&#10;• Team coding conventions&#10;• Historical issue patterns&#10;• Language-specific best practices&#10;• Performance benchmarks"></textarea>
+            </div>
+
+            <div class="canvas-section core-activities">
+                <div class="section-title">
+                    <span class="icon">⚙️</span>
+                    CORE ACTIVITIES
+                </div>
+                <div class="section-subtitle">What are the key activities this agent performs?</div>
+                <textarea class="editable-area" id="core-activities" placeholder="Key Activities:&#10;• Data Processing    • Decision Making    • Communication&#10;• Analysis          • Validation        • Coordination&#10;• Simulation        • Optimization      • Learning&#10;&#10;Examples:&#10;• Analyze code for quality issues&#10;• Identify potential bugs & security vulnerabilities&#10;• Suggest optimizations & refactoring opportunities&#10;• Check compliance with coding standards&#10;• Generate test coverage recommendations&#10;• Prioritize technical debt items"></textarea>
+            </div>
+
+            <div class="canvas-section resources">
+                <div class="section-title">
+                    <span class="icon">🔧</span>
+                    TOOLS
+                </div>
+                <div class="section-subtitle">What tools & systems does it access?</div>
+                <textarea class="editable-area" id="resources" placeholder="• External Systems&#10;• APIs&#10;• Databases&#10;&#10;Examples:&#10;• Version control systems&#10;• Code analysis tools&#10;• Testing frameworks&#10;• Documentation systems&#10;• Issue trackers&#10;• Knowledge bases"></textarea>
+            </div>
+
+            <div class="canvas-section outputs">
+                <div class="section-title">
+                    <span class="icon">📤</span>
+                    OUTPUTS
+                </div>
+                <div class="section-subtitle">What does this agent produce/deliver?</div>
+                <textarea class="editable-area" id="outputs" placeholder="• Reports        • Decisions&#10;• Notifications  • Actions&#10;• Data updates   • Recommendations&#10;• Alerts         • Insights&#10;&#10;Examples:&#10;• Code review comments&#10;• Refactoring suggestions&#10;• Performance optimization reports&#10;• Test coverage analysis&#10;• Documentation improvements&#10;• Technical debt scorecards"></textarea>
+            </div>
+
+            <div class="canvas-section human-loop">
+                <div class="section-title">
+                    <span class="icon">🤝</span>
+                    HUMAN-IN-THE-LOOP
+                </div>
+                <div class="section-subtitle">Where do humans get involved?</div>
+                <textarea class="editable-area" id="human-loop" placeholder="• Approvals&#10;• Overrides&#10;• Feedback&#10;• Exceptions&#10;&#10;Examples:&#10;• Complex architectural decisions&#10;• Final approval of changes&#10;• Resolution of conflicting recommendations&#10;• Training the agent on team preferences&#10;• Handling novel technical challenges"></textarea>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-success" onclick="saveCanvas()">
+                💾 Save Canvas
+            </button>
+            <button class="btn btn-primary" onclick="loadExample()">
+                📋 Load Example
+            </button>
+            <button class="btn btn-secondary" onclick="clearCanvas()">
+                🗑️ Clear All
+            </button>
+            <button class="btn btn-primary" onclick="exportCanvas()">
+                📄 Export to Text
+            </button>
+            <button class="btn btn-success" onclick="exportToPDF()">
+                📋 Export to PDF
+            </button>
+            <button class="btn btn-secondary" onclick="downloadBackup()">
+                💾 Download Backup
+            </button>
+            <input type="file" id="fileInput" accept=".json" style="display: none;" onchange="loadBackup(event)">
+            <button class="btn btn-secondary" onclick="document.getElementById('fileInput').click()">
+                📂 Load Backup
+            </button>
+            <button class="btn btn-primary" onclick="toggleFullscreen()">
+                🖥️ Toggle Fullscreen
+            </button>
+            <button class="btn btn-help" onclick="showHelp()">
+                ❓ 
+            </button>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+    <div class="data-status" id="dataStatus">
+        <span class="status-dot status-saved"></span>
+        <span id="statusText">Data saved</span>
+    </div>
+    
+    <!-- Help Modal -->
+    <div id="helpModal" class="help-modal">
+        <div class="help-content">
+            <div class="help-header">
+                <h2>AI Agent Canvas™ User Guide</h2>
+                <span class="help-close" onclick="hideHelp()">&times;</span>
+            </div>
+            <div class="help-body" id="helpContent">
+                <!-- Help content will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Include jsPDF library -->
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script> -->
+    <script src="./jspdf.umd.min.js"></script>
+    <script>
+        // Data reliability improvements
+        let saveTimeout;
+        let lastSaveTime = null;
+        const SAVE_INTERVAL = 2000; // 2 seconds
+        
+        // Updated sections array to match new structure
+        const sections = ['stakeholders', 'agent-identity', 'context', 'memory', 'value-delivered', 
+                         'inputs', 'core-activities', 'resources', 'outputs', 'human-loop'];
+                         
+        // Function to enter fullscreen mode
+        function enterFullscreen() {
+            const element = document.documentElement;
+            
+            if (element.requestFullscreen) {
+                element.requestFullscreen();
+            } else if (element.mozRequestFullScreen) { // Firefox
+                element.mozRequestFullScreen();
+            } else if (element.webkitRequestFullscreen) { // Chrome, Safari and Opera
+                element.webkitRequestFullscreen();
+            } else if (element.msRequestFullscreen) { // IE/Edge
+                element.msRequestFullscreen();
+            }
+        }
+
+        // Function to toggle fullscreen mode
+        function toggleFullscreen() {
+            const doc = document.documentElement;
+
+            if (!document.fullscreenElement && 
+                !document.mozFullScreenElement &&
+                !document.webkitFullscreenElement &&
+                !document.msFullscreenElement) {
+                // Enter fullscreen
+                if (doc.requestFullscreen) {
+                    doc.requestFullscreen();
+                } else if (doc.mozRequestFullScreen) { // Firefox
+                    doc.mozRequestFullScreen();
+                } else if (doc.webkitRequestFullscreen) { // Chrome, Safari & Opera
+                    doc.webkitRequestFullscreen();
+                } else if (doc.msRequestFullscreen) { // IE/Edge
+                    doc.msRequestFullscreen();
+                }
+            } else {
+                // Exit fullscreen
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.mozCancelFullScreen) { // Firefox
+                    document.mozCancelFullScreen();
+                } else if (document.webkitExitFullscreen) { // Chrome, Safari & Opera
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) { // IE/Edge
+                    document.msExitFullscreen();
+                }
+            }
+        }
+
+        // Check localStorage availability and space
+        function checkStorageReliability() {
+            try {
+                const test = 'storage-test';
+                localStorage.setItem(test, test);
+                localStorage.removeItem(test);
+                return true;
+            } catch (e) {
+                console.warn('localStorage not available:', e);
+                return false;
+            }
+        }
+
+        function updateDataStatus(status, message) {
+            const statusEl = document.getElementById('dataStatus');
+            const textEl = document.getElementById('statusText');
+            const dotEl = statusEl.querySelector('.status-dot');
+            
+            dotEl.className = `status-dot status-${status}`;
+            textEl.textContent = message;
+        }
+
+        // Enhanced auto-save with status updates
+        function autoSave() {
+            updateDataStatus('saving', 'Saving...');
+            
+            try {
+                const data = {
+                    timestamp: new Date().toISOString(),
+                    version: '1.0',
+                    sections: {}
+                };
+                
+                sections.forEach(section => {
+                    data.sections[section] = document.getElementById(section).value;
+                });
+                
+                localStorage.setItem('ai-canvas', JSON.stringify(data));
+                localStorage.setItem('ai-canvas-backup', JSON.stringify(data));
+                
+                lastSaveTime = Date.now();
+                updateDataStatus('saved', `Saved ${new Date().toLocaleTimeString()}`);
+                
+            } catch (e) {
+                console.error('Save failed:', e);
+                updateDataStatus('unsaved', 'Save failed - storage full?');
+                showToast('⚠️ Save failed! Please download backup.');
+            }
+        }
+
+        // Load saved data on page load with error handling
+        window.addEventListener('load', () => {
+            try {
+                const savedData = localStorage.getItem('ai-canvas');
+                if (savedData) {
+                    const data = JSON.parse(savedData);
+                    const sectionsData = data.sections || data; // Handle both new and old formats
+                    
+                    sections.forEach(section => {
+                        const element = document.getElementById(section);
+                        if (sectionsData[section]) {
+                            element.value = sectionsData[section];
+                        }
+                    });
+                    
+                    updateDataStatus('saved', 'Data loaded');
+                } else {
+                    updateDataStatus('saved', 'No saved data');
+                }
+            } catch (e) {
+                console.error('Load failed:', e);
+                updateDataStatus('unsaved', 'Load failed');
+            }
+
+            // Auto-save on input with debouncing
+            sections.forEach(section => {
+                const element = document.getElementById(section);
+                element.addEventListener('input', () => {
+                    updateDataStatus('unsaved', 'Changes pending...');
+                    clearTimeout(saveTimeout);
+                    saveTimeout = setTimeout(autoSave, SAVE_INTERVAL);
+                });
+            });
+            
+            // Show welcome message with fullscreen suggestion
+            setTimeout(() => {
+                showToast('Welcome! Click the fullscreen button 🖥️ for best experience');
+            }, 1000);
+        });
+
+        function saveCanvas() {
+            autoSave();
+            showToast('Canvas saved successfully! ✅');
+        }
+
+        function clearCanvas() {
+            if (confirm('Are you sure you want to clear all sections? This cannot be undone.')) {
+                sections.forEach(section => {
+                    document.getElementById(section).value = '';
+                });
+                localStorage.removeItem('ai-canvas');
+                updateDataStatus('saved', 'Canvas cleared');
+                showToast('Canvas cleared! 🗑️');
+            }
+        }
+
+        function loadExample() {
+            const example = {
+                'stakeholders': '• Software Developers\n• QA Engineers\n• Product Managers\n• DevOps Engineers\n• UX Designers\n• Technical Writers',
+                'agent-identity': 'Name: CodeAssist\nRole: Code review & optimization\nDomain: Software Engineering\nType: Proactive',
+                'context': '• Active repository state\n• Current sprint goals\n• Team capacity & workload\n• CI/CD pipeline status\n• Previous feedback history',
+                'memory': '• Codebase structure & patterns\n• Team coding conventions\n• Historical issue patterns\n• Language-specific best practices\n• Performance benchmarks',
+                'value-delivered': '• 40% reduction in code review time\n• 30% fewer bugs in production\n• Consistent code quality\n• Knowledge sharing across team\n• Reduced technical debt',
+                'inputs': '• Pull requests\n• Code commits\n• Issue tickets\n• Documentation changes\n• Test results\n• Static analysis reports',
+                'core-activities': '• Analyze code for quality issues\n• Identify potential bugs & security vulnerabilities\n• Suggest optimizations & refactoring opportunities\n• Check compliance with coding standards\n• Generate test coverage recommendations\n• Prioritize technical debt items',
+                'resources': '• Version control systems\n• Code analysis tools\n• Testing frameworks\n• Documentation systems\n• Issue trackers\n• Knowledge bases',
+                'outputs': '• Code review comments\n• Refactoring suggestions\n• Performance optimization reports\n• Test coverage analysis\n• Documentation improvements\n• Technical debt scorecards',
+                'human-loop': '• Complex architectural decisions\n• Final approval of changes\n• Resolution of conflicting recommendations\n• Training the agent on team preferences\n• Handling novel technical challenges'
+            };
+
+            sections.forEach(section => {
+                document.getElementById(section).value = example[section] || '';
+            });
+            
+            autoSave();
+            showToast('Example loaded! 📋');
+        }
+
+        // Enhanced backup functionality
+        function downloadBackup() {
+            try {
+                const data = {
+                    timestamp: new Date().toISOString(),
+                    version: '1.0',
+                    application: 'AI Agent Canvas',
+                    sections: {}
+                };
+                
+                sections.forEach(section => {
+                    data.sections[section] = document.getElementById(section).value;
+                });
+                
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `ai-canvas-backup-${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                showToast('Backup downloaded! 💾');
+            } catch (e) {
+                console.error('Backup failed:', e);
+                showToast('❌ Backup failed!');
+            }
+        }
+
+        function loadBackup(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    const sectionsData = data.sections || data;
+                    
+                    sections.forEach(section => {
+                        if (sectionsData[section]) {
+                            document.getElementById(section).value = sectionsData[section];
+                        }
+                    });
+                    
+                    autoSave();
+                    showToast('Backup loaded successfully! 📂');
+                } catch (err) {
+                    console.error('Load backup failed:', err);
+                    showToast('❌ Invalid backup file!');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function exportCanvas() {
+            const data = {};
+            sections.forEach(section => {
+                data[section] = document.getElementById(section).value;
+            });
+
+            const exportText = `AI AGENT CANVAS™
+Generated: ${new Date().toLocaleString()}
+
+STAKEHOLDERS:
+${data.stakeholders || 'Not filled'}
+
+AGENT IDENTITY:
+${data['agent-identity'] || 'Not filled'}
+
+CONTEXT:
+${data.context || 'Not filled'}
+
+MEMORY:
+${data.memory || 'Not filled'}
+
+VALUE DELIVERED:
+${data['value-delivered'] || 'Not filled'}
+
+INPUTS:
+${data.inputs || 'Not filled'}
+
+CORE ACTIVITIES:
+${data['core-activities'] || 'Not filled'}
+
+RESOURCES:
+${data.resources || 'Not filled'}
+
+OUTPUTS:
+${data.outputs || 'Not filled'}
+
+HUMAN-IN-THE-LOOP:
+${data['human-loop'] || 'Not filled'}`;
+
+            const blob = new Blob([exportText], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `ai-agent-canvas-${new Date().toISOString().split('T')[0]}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showToast('Canvas exported! 📄');
+        }
+
+        // PDF Export with visual layout
+        function exportToPDF() {
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF('landscape', 'mm', 'a4');
+                
+                // PDF dimensions (A4 landscape: 297x210mm)
+                const pageWidth = 297;
+                const pageHeight = 210;
+                const margin = 15;
+                const contentWidth = pageWidth - 2 * margin;
+                const contentHeight = pageHeight - 2 * margin;
+                
+                // Colors
+                const headerBg = [44, 62, 80];
+                const sectionBg = [248, 249, 250];
+                const borderColor = [224, 224, 224];
+                const textColor = [44, 62, 80];
+                
+                // Header
+                doc.setFillColor(...headerBg);
+                doc.rect(0, 0, pageWidth, 40, 'F');
+                doc.setTextColor(255, 255, 255);
+                doc.setFontSize(24);
+                doc.setFont('helvetica', 'bold');
+                doc.text('AI AGENT CANVAS™', pageWidth/2, 20, { align: 'center' });
+                doc.setFontSize(12);
+                doc.setFont('helvetica', 'normal');
+                doc.text('A Visual Template for Designing Multi-Agent Systems', pageWidth/2, 30, { align: 'center' });
+                
+                // Reset text color for content
+                doc.setTextColor(...textColor);
+                
+                // Grid layout - 4 columns, 3 rows
+                const colWidth = contentWidth / 4;
+                const rowHeight = (contentHeight - 40) / 3; // Subtract header space
+                const startY = 45; // Start below header
+                
+                const sectionData = [
+                    // Row 1
+                    { title: 'TARGET USERS', subtitle: 'Who interacts with this agent?', id: 'stakeholders', x: 0, y: 0 },
+                    { title: 'AGENT IDENTITY', subtitle: 'Core agent definition', id: 'agent-identity', x: 1, y: 0, width: 2 },
+                    { title: 'VALUE DELIVERED', subtitle: 'What value does it provide?', id: 'value-delivered', x: 3, y: 0 },
+                    
+                    // Row 2
+                    { title: 'INPUTS', subtitle: 'What triggers this agent?', id: 'inputs', x: 0, y: 1 },
+                    { title: 'CORE ACTIVITIES', subtitle: 'Key activities performed', id: 'core-activities', x: 1, y: 1, width: 2 },
+                    { title: 'OUTPUTS', subtitle: 'What it produces/delivers', id: 'outputs', x: 3, y: 1 },
+                    
+                    // Row 3
+                    { title: 'TOOLS', subtitle: 'Tools & systems accessed', id: 'resources', x: 0, y: 2 },
+                    { title: 'MEMORY', subtitle: 'What it remembers & learns', id: 'memory', x: 1, y: 2 },
+                    { title: 'CONTEXT', subtitle: 'Situational awareness', id: 'context', x: 2, y: 2 },
+                    { title: 'HUMAN-IN-THE-LOOP', subtitle: 'Where humans get involved', id: 'human-loop', x: 3, y: 2 }
+                ];
+                
+                sectionData.forEach(section => {
+                    const x = margin + section.x * colWidth;
+                    const y = startY + section.y * rowHeight;
+                    const width = (section.width || 1) * colWidth;
+                    const height = rowHeight;
+                    
+                    // Section background
+                    doc.setFillColor(...sectionBg);
+                    doc.rect(x, y, width, height, 'F');
+                    
+                    // Section border
+                    doc.setDrawColor(...borderColor);
+                    doc.setLineWidth(0.5);
+                    doc.rect(x, y, width, height, 'S');
+                    
+                    // Section title
+                    doc.setFontSize(10);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text(section.title, x + 3, y + 8);
+                    
+                    // Section subtitle
+                    doc.setFontSize(8);
+                    doc.setFont('helvetica', 'italic');
+                    doc.setTextColor(127, 140, 141);
+                    doc.text(section.subtitle, x + 3, y + 13);
+                    
+                    // Section content
+                    doc.setTextColor(...textColor);
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(8);
+                    
+                    const content = document.getElementById(section.id).value || 'Not filled';
+                    const lines = doc.splitTextToSize(content, width - 6);
+                    
+                    // Limit lines to fit in section
+                    const maxLines = Math.floor((height - 18) / 3);
+                    const displayLines = lines.slice(0, maxLines);
+                    
+                    displayLines.forEach((line, index) => {
+                        doc.text(line, x + 3, y + 18 + index * 3);
+                    });
+                    
+                    if (lines.length > maxLines) {
+                        doc.setTextColor(127, 140, 141);
+                        doc.text('...', x + 3, y + 18 + maxLines * 3);
+                        doc.setTextColor(...textColor);
+                    }
+                });
+                
+                // Footer
+                doc.setFontSize(8);
+                doc.setTextColor(127, 140, 141);
+                doc.text(`Generated: ${new Date().toLocaleString()}`, margin, pageHeight - 5);
+                doc.text('AI Agent Canvas™', pageWidth - margin, pageHeight - 5, { align: 'right' });
+                
+                // Save PDF
+                const filename = `ai-agent-canvas-${new Date().toISOString().split('T')[0]}.pdf`;
+                doc.save(filename);
+                
+                showToast('PDF exported successfully! 📋');
+                
+            } catch (e) {
+                console.error('PDF export failed:', e);
+                showToast('❌ PDF export failed! Try text export instead.');
+            }
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+        
+        // Help modal functions
+        function showHelp() {
+            document.getElementById('helpModal').style.display = 'block';
+            loadHelpContent();
+        }
+        
+        function hideHelp() {
+            document.getElementById('helpModal').style.display = 'none';
+        }
+        
+        function loadHelpContent() {
+            const helpContent = document.getElementById('helpContent');
+            
+            // HTML version of the README content
+            helpContent.innerHTML = `
+                <h2>Overview</h2>
+                <p>The AI Agent Canvas™ is a visual template for designing AI-driven multi-agent systems. It provides a structured framework to help you define and document your AI agent's characteristics, behaviors, and interactions.</p>
+
+                <h2>Getting Started</h2>
+                <h3>Installation</h3>
+                <p>This is a standalone web application that runs in any modern browser. To use the AI Agent Canvas:</p>
+                <ol>
+                    <li>Extract all files from the zip archive to a folder on your computer</li>
+                    <li>Make sure to keep all files in the same directory (the HTML file and the jsPDF library)</li>
+                    <li>Open the <code>ai-agent-canvas.html</code> file in your web browser (Chrome, Firefox, Edge, or Safari)</li>
+                </ol>
+
+                <h3>System Requirements</h3>
+                <ul>
+                    <li>A modern web browser (Chrome, Firefox, Edge, or Safari - latest versions recommended)</li>
+                    <li>JavaScript enabled</li>
+                    <li>Local file access permissions for your browser</li>
+                    <li>No internet connection required (the app works completely offline)</li>
+                </ul>
+
+                <h2>Using the Canvas</h2>
+                <h3>Canvas Sections</h3>
+                <p>The canvas is divided into 10 key sections, each focusing on a different aspect of your AI agent:</p>
+                <ol>
+                    <li><strong>TARGET USERS</strong>: Define who will interact with your agent (human users, other agents, systems)</li>
+                    <li><strong>AGENT IDENTITY</strong>: Establish the core definition of your agent (name, role, domain, type)</li>
+                    <li><strong>VALUE DELIVERED</strong>: Articulate the value and benefits your agent provides</li>
+                    <li><strong>INPUTS</strong>: Document what triggers or activates your agent</li>
+                    <li><strong>CORE ACTIVITIES</strong>: Detail the key functions and processes your agent performs</li>
+                    <li><strong>OUTPUTS</strong>: Specify what your agent produces or delivers</li>
+                    <li><strong>TOOLS</strong>: List the tools, systems, and resources your agent utilizes</li>
+                    <li><strong>MEMORY</strong>: Define what your agent remembers and learns over time</li>
+                    <li><strong>CONTEXT</strong>: Describe the situational awareness your agent maintains</li>
+                    <li><strong>HUMAN-IN-THE-LOOP</strong>: Identify where human intervention is required or beneficial</li>
+                </ol>
+
+                <h3>Basic Controls</h3>
+                <p>At the bottom of the canvas, you'll find several control buttons:</p>
+                <ul>
+                    <li><strong>💾 Save Canvas</strong>: Saves your current work to your browser's local storage</li>
+                    <li><strong>📋 Load Example</strong>: Loads a pre-filled example to help you get started</li>
+                    <li><strong>🗑️ Clear All</strong>: Erases all content from all sections</li>
+                    <li><strong>📄 Export to Text</strong>: Exports your canvas to a plain text file</li>
+                    <li><strong>📋 Export to PDF</strong>: Exports your canvas to a professionally formatted PDF</li>
+                    <li><strong>💾 Download Backup</strong>: Saves your work as a JSON file on your computer</li>
+                    <li><strong>📂 Load Backup</strong>: Restores your work from a previously saved JSON file</li>
+                    <li><strong>🖥️ Toggle Fullscreen</strong>: Switches between fullscreen and windowed mode</li>
+                    <li><strong>❓ </strong>: Shows this help documentation</li>
+                </ul>
+
+                <h2>Working with the Canvas</h2>
+                <h3>Auto-Save Feature</h3>
+                <p>The canvas automatically saves your work to your browser's local storage as you type. A status indicator in the bottom-right corner shows when changes are saved.</p>
+
+                <h3>Creating Your First Canvas</h3>
+                <ol>
+                    <li>Click <strong>📋 Load Example</strong> to see how a completed canvas looks</li>
+                    <li>Click <strong>🗑️ Clear All</strong> to start with a blank canvas</li>
+                    <li>Fill in each section with details about your AI agent</li>
+                    <li>Your work is automatically saved as you type</li>
+                </ol>
+
+                <h3>Best Practices</h3>
+                <ul>
+                    <li>Use bullet points for clarity (• can be typed with Alt+7 on the numeric keypad)</li>
+                    <li>Fill in all sections for a complete agent definition</li>
+                    <li>Be specific about your agent's capabilities and limitations</li>
+                    <li>Consider the interconnections between different sections</li>
+                    <li>Use the example as a reference for formatting and level of detail</li>
+                </ul>
+
+                <h3>Exporting Your Work</h3>
+                <ul>
+                    <li><strong>Text Export</strong>: Creates a plain text file with all your canvas content</li>
+                    <li><strong>PDF Export</strong>: Generates a visually formatted PDF document with your canvas layout preserved</li>
+                    <li><strong>Backup</strong>: Creates a JSON file that can be used to restore your work on any computer</li>
+                </ul>
+
+                <h2>Troubleshooting</h2>
+                <h3>Common Issues</h3>
+                <ul>
+                    <li><strong>Save Failed</strong>: If you see a "Save Failed" message, your browser's local storage may be full. Use the "Download Backup" option to save your work.</li>
+                    <li><strong>PDF Export Fails</strong>: Some browsers have limitations with PDF generation. Try the text export instead.</li>
+                    <li><strong>Display Issues</strong>: For the best experience, use the fullscreen mode or try a different browser.</li>
+                </ul>
+
+                <h3>Data Recovery</h3>
+                <p>The application creates automatic backups in your browser's local storage. If you accidentally clear your canvas, check if there's a backup by:</p>
+                <ol>
+                    <li>Closing and reopening the application</li>
+                    <li>If your data doesn't reappear, there may not be a recoverable backup</li>
+                </ol>
+                <p>Always use the "Download Backup" option periodically to save important work to your computer.</p>
+
+                <h2>Privacy Notice</h2>
+                <p>This application works entirely in your browser and does not send any data to external servers. All your work is stored locally on your device, ensuring complete privacy and data security.</p>
+
+                <h2>License and Copyright</h2>
+                <p>AI Agent Canvas™ is provided for personal and professional use. All rights reserved.</p>
+
+                <hr>
+
+                <p>For questions or support, please open an issue on the GitHub repository.</p>
+            `;
+        }
+        
+        // Close the help modal when clicking outside of it
+        window.onclick = function(event) {
+            const modal = document.getElementById('helpModal');
+            if (event.target === modal) {
+                hideHelp();
+            }
+        };
+        
+        // Allow ESC key to close the help modal
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                hideHelp();
+            }
+        });
+    </script>
+</body>
+</html>
