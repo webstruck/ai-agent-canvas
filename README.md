@@ -120,10 +120,10 @@ Nilesh Raghuvanshi. AI Agent Canvas: A Visual Template for Multi-Agent System De
 
 BibTeX:
 ```bibtex
-@software{raghuvanshi2025aiagentcanvas,
-  author       = {Nilesh Raghuvanshi},
-  title        = {{AI Agent Canvas: A Visual Template for Multi-Agent System Design}},
-  year         = 2025,
-  doi          = {10.5281/zenodo.15700630},
-  url          = {https://github.com/webstruck/ai-agent-canvas}
+@software{Nilesh_Raghuvanshi_AI_Agent_Canvas,
+author = {Nilesh Raghuvanshi, Nilesh},
+doi = {10.5281/zenodo.15700630},
+license = {MIT},
+title = {{AI Agent Canvas: A Visual Template for Multi-Agent System Design}},
+url = {https://github.com/webstruck/ai-agent-canvas}
 }
