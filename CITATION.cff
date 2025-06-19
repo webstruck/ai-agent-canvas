@@ -1,8 +1,20 @@
 cff-version: 1.2.0
-message: "If you use this Canvas in your research or product, please cite as below."
+title: >-
+  AI Agent Canvas: A Visual Template for Multi-Agent System
+  Design
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
 authors:
-  - familyNames: Raghuvanshi
-    givenNames: Nilesh
-title: "AI Agent Canvas: A Visual Template for Multi-Agent System Design"
-version: 0.1.0
-date-released: 2025-06-19
+  - given-names: Nilesh
+    family-names: Raghuvanshi
+    email: nilesh.raghuvanshi@gmail.com
+    name-particle: Nilesh
+repository-code: 'https://github.com/webstruck/ai-agent-canvas'
+abstract: >-
+  The AI Agent Canvas is a visual template for designing
+  AI-driven multi-agent systems. It provides a structured
+  framework to help you define and document your AI agent's
+  characteristics, behaviors, and interactions.
+license: MIT
