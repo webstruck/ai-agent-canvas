@@ -4,6 +4,10 @@
 
 The AI Agent Canvas™ is a visual template for designing AI-driven multi-agent systems. It provides a structured framework to help you define and document your AI agent's characteristics, behaviors, and interactions.
 
+![AI Agent Canvas](ai_agent_canvas.png)
+
+The canvas provides a comprehensive framework for designing intelligent agents, helping you visualize all critical components and their relationships.
+
 ## Getting Started
 
 ### Installation
