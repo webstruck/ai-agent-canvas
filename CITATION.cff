@@ -18,3 +18,4 @@ abstract: >-
   framework to help you define and document your AI agent's
   characteristics, behaviors, and interactions.
 license: MIT
+doi: 10.5281/zenodo.15700630
