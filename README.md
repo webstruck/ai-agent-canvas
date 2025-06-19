@@ -110,3 +110,20 @@ AI Agent Canvas™ is provided for personal and professional use. All rights res
 ---
 
 For questions or support, please open an issue on the GitHub repository.
+
+## 📖 Citation
+
+If you use **AI Agent Canvas** in your work, please cite it:
+
+Nilesh Raghuvanshi. AI Agent Canvas: A Visual Template for Multi-Agent System Design. 2025. DOI: 10.5281/zenodo.15700630
+
+
+BibTeX:
+```bibtex
+@software{raghuvanshi2025aiagentcanvas,
+  author       = {Nilesh Raghuvanshi},
+  title        = {{AI Agent Canvas: A Visual Template for Multi-Agent System Design}},
+  year         = 2025,
+  doi          = {10.5281/zenodo.15700630},
+  url          = {https://github.com/webstruck/ai-agent-canvas}
+}
